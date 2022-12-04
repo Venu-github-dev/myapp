@@ -1,0 +1,42 @@
+pipeline {
+agent any
+environment {
+   PROJECT_VERSION=project_version()
+ }
+stages {
+   //stage('Git checkout') {
+  //  steps {
+  //  git credentialsId: 'github_credentials', url: 'https://github.com/Venu-github-dev/myapp.git'
+  //  }
+  //  }
+
+   stage('maven build') {
+   steps {
+   sh 'mvn clean package'
+   }
+   }
+
+   stage ('Docker build') {
+   steps {
+   sh '''
+   docker build -t myapp:$PROJECT_VERSION .
+   '''
+   }
+   }
+
+   stage ('Docker push to docker hub') {
+   steps {
+   sh '''
+   docker login -u venudocker22 -p Venu1994@@
+   docker tag myapp:$PROJECT_VERSION venudocker22/testapp:$PROJECT_VERSION
+   docker push venudocker22/testapp:$PROJECT_VERSION
+   '''
+   }
+   }
+}
+}
+
+def project_version() {
+   return sh(returnStdout: true, script:"cat pom.xml | grep \"version\" | head -1 | awk \'{print \$1}\' |  sed \"s/<version>//\" | sed \"s/<.*//\"")
+ }
+
